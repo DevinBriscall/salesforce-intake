@@ -39,6 +39,30 @@ export default function Home() {
 		}
 	}
 
+	async function handleDelete(clientId) {
+		try {
+			const res = await fetch("/api/delete", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ clientId }),
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				toast.error("failed to delete user from SalesForce.");
+				return;
+			}
+
+			toast.success("user deleted from SalesForce.");
+			await fetchContacts();
+		} catch (error) {
+			toast.error("something went wrong");
+		}
+	}
+
 	async function fetchContacts() {
 		try {
 			const res = await fetch("/api/contacts");
@@ -60,15 +84,10 @@ export default function Home() {
 						onSubmit={handleSubmit}
 						className="rounded-xl border-2 p-16 w-full bg-[#f1f1f1] flex flex-col gap-4 items-center"
 					>
-						<h1 className="text-4xl font-bold">
-							Customer Intake Form
-						</h1>
+						<h1 className="text-4xl font-bold">Customer Intake Form</h1>
 						<div className="flex gap-8 w-full">
 							<div className="flex flex-col w-full">
-								<label
-									htmlFor="first"
-									className="font-semibold"
-								>
+								<label htmlFor="first" className="font-semibold">
 									First
 								</label>
 								<input
@@ -115,7 +134,7 @@ export default function Home() {
 								name="notes"
 								type="text"
 								placeholder="notes"
-								className="p-2 border-2 rounded-md"
+								className="p-2 border-2 rounded-md resize-none"
 							></textarea>
 						</div>
 						<button
@@ -127,17 +146,28 @@ export default function Home() {
 					</form>
 					{/* list of contacts in salesforce */}
 					<div>
-						<h2 className="text-2xl font-bold mb-4">
-							Existing Clients
-						</h2>
-						<ul className="bg-white p-6 rounded-lg shadow-md space-y-2">
-							{contacts.map((contact) => (
-								<li key={contact.Id} className="border-b pb-2">
-									{contact.FirstName} {contact.LastName} -{" "}
-									{contact.Email}
-								</li>
-							))}
-						</ul>
+						<h2 className="text-2xl font-bold mb-4">Existing Clients</h2>
+						{contacts.length ? (
+							<ul className="bg-white p-6 rounded-lg shadow-md space-y-2">
+								{contacts.map((contact) => (
+									<li key={contact.Id} className="border-b pb-2">
+										<div className="flex justify-between">
+											<span>
+												{contact.FirstName} {contact.LastName} - {contact.Email}
+											</span>
+											<button
+												onClick={() => handleDelete(contact.Id)}
+												className="text-red-500 hover:underline cursor-pointer"
+											>
+												DELETE
+											</button>
+										</div>
+									</li>
+								))}
+							</ul>
+						) : (
+							<div>No clients found</div>
+						)}
 					</div>
 				</div>
 			</div>
