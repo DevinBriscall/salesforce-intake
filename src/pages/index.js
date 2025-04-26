@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 //INTAKE FORM
 export default function Home() {
 	const [contacts, setContacts] = useState([]);
+	const [editContact, setEditContact] = useState(null); //the contact in the form after clicking the edit button
 
 	useEffect(() => {
 		fetchContacts();
@@ -15,27 +16,54 @@ export default function Home() {
 		const formData = new FormData(e.target);
 		const payload = Object.fromEntries(formData);
 
-		//call our /api/intake API endpoint to upload our data to salesforce and sharepoint
-		try {
-			const response = await fetch("/api/intake", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(payload),
-			});
+		//If we are editing setup a PATCH request
+		if (editContact) {
+			try {
+				const response = await fetch(`/api/edit`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						clientId: editContact.Id,
+						...payload,
+					}),
+				});
 
-			const data = await response.json();
-			console.log("Server Resposne:", data);
+				const data = await response.json();
+				console.log("Server Response:", data);
 
-			toast.success("client successfully created in salesforce");
-			e.target.reset();
+				toast.success("Contact successfully updated in Salesforce");
+				setEditContact(null);
+				e.target.reset();
+				await fetchContacts();
+			} catch (error) {
+				toast.error("Something went wrong");
+				console.error("Error updating client:", error);
+			}
+		} else {
+			//we are uploading a new contact
+			try {
+				const response = await fetch("/api/intake", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(payload),
+				});
 
-			//refresh the contacts list
-			await fetchContacts();
-		} catch (error) {
-			toast.error("something went wrong");
-			console.error("Error submitting form:", error);
+				const data = await response.json();
+				console.log("Server Resposne:", data);
+
+				toast.success("client successfully created in salesforce");
+				e.target.reset();
+
+				//refresh the contacts list
+				await fetchContacts();
+			} catch (error) {
+				toast.error("something went wrong");
+				console.error("Error submitting form:", error);
+			}
 		}
 	}
 
@@ -49,8 +77,6 @@ export default function Home() {
 				body: JSON.stringify({ clientId }),
 			});
 
-			const data = await res.json();
-
 			if (!res.ok) {
 				toast.error("failed to delete user from SalesForce.");
 				return;
@@ -61,6 +87,27 @@ export default function Home() {
 		} catch (error) {
 			toast.error("something went wrong");
 		}
+	}
+
+	function populateFormForEdit(contact) {
+		setEditContact(contact);
+		window.scrollTo({ top: 0, behavior: "smooth" });
+
+		//populate the form
+		document.getElementById("first").value = contact.FirstName;
+		document.getElementById("last").value = contact.LastName;
+		document.getElementById("email").value = contact.Email;
+		document.getElementById("notes").value = contact.Description;
+	}
+
+	// Clear form when aborting edit
+	function handleAbort() {
+		setEditContact(null);
+		document.getElementById("first").value = "";
+		document.getElementById("last").value = "";
+		document.getElementById("email").value = "";
+		document.getElementById("notes").value = "";
+		toast.success("edit aborted. no changes were made.");
 	}
 
 	async function fetchContacts() {
@@ -85,7 +132,7 @@ export default function Home() {
 						className="rounded-xl border-2 p-16 w-full bg-[#f1f1f1] flex flex-col gap-4 items-center"
 					>
 						<h1 className="text-4xl font-bold">Customer Intake Form</h1>
-						<div className="flex gap-8 w-full">
+						<div className="flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 w-full">
 							<div className="flex flex-col w-full">
 								<label htmlFor="first" className="font-semibold">
 									First
@@ -141,8 +188,17 @@ export default function Home() {
 							type="submit"
 							className="bg-blue-500/90 rounded-md min-w-[200px] text-white p-3 cursor-pointer hover:bg-blue-500 transition-colors duration-300"
 						>
-							Submit
+							{editContact ? "Update Contact" : "Submit"}
 						</button>
+						{editContact && (
+							<button
+								type="button"
+								onClick={handleAbort}
+								className="bg-red-500/90 rounded-md min-w-[200px] text-white p-3 cursor-pointer hover:bg-red-500 transition-colors duration-300"
+							>
+								Abort Edit
+							</button>
+						)}
 					</form>
 					{/* list of contacts in salesforce */}
 					<div>
@@ -155,12 +211,21 @@ export default function Home() {
 											<span>
 												{contact.FirstName} {contact.LastName} - {contact.Email}
 											</span>
-											<button
-												onClick={() => handleDelete(contact.Id)}
-												className="text-red-500 hover:underline cursor-pointer"
-											>
-												DELETE
-											</button>
+											{/* action buttons */}
+											<div className="flex gap-2">
+												<button
+													onClick={() => populateFormForEdit(contact)}
+													className="text-blue-500 hover:underline cursor-pointer"
+												>
+													Edit
+												</button>
+												<button
+													onClick={() => handleDelete(contact.Id)}
+													className="text-red-500 hover:underline cursor-pointer"
+												>
+													DELETE
+												</button>
+											</div>
 										</div>
 									</li>
 								))}

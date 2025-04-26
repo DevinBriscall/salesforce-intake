@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
 	try {
 		const response = await fetch(
-			`${process.env.SALESFORCE_INSTANCE_URL}/services/data/v55.0/query?q=SELECT+Id,FirstName,LastName,Email+FROM+Contact+WHERE+IsDeleted=false+ORDER+BY+CreatedDate+DESC+LIMIT+10`,
+			`${process.env.SALESFORCE_INSTANCE_URL}/services/data/v55.0/query?q=SELECT+Id,FirstName,LastName,Email,Description+FROM+Contact+WHERE+IsDeleted=false+ORDER+BY+CreatedDate+DESC+LIMIT+10`,
 			{
 				method: "GET",
 				headers: {
