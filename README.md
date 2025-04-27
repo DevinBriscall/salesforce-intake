@@ -1,6 +1,7 @@
-Next.js application that intakes client info, POSTs it to SalesForce and triggers a Zapier webhook
+Next.js CRUD application for client intake/management integrated with SalesForce. Zapier webhook trigger sends discord server notification when new client is uploaded.
 
-make env file with these for quick setup:
+env file with these for quick setup:
+
 SALESFORCE_INSTANCE_URL=...
 
 SALESFORCE_ACCESS_TOKEN=...
