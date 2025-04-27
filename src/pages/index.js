@@ -123,7 +123,7 @@ export default function Home() {
 
 	return (
 		<>
-			<div className="min-h-screen p-4 w-screen flex justify-center items-center bg-gray-300">
+			<div className="min-h-screen p-4 flex justify-center items-center bg-gray-300">
 				{/* div to hold the form and the list of contacts */}
 				<div className="flex flex-col gap-4 w-3/4">
 					{/* the form */}
